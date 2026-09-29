@@ -35,8 +35,8 @@ export const InputDock: React.FC<InputDockProps> = ({
   };
 
   return (
-    <div className="fixed bottom-14 md:bottom-0 inset-x-0 z-40 bg-gradient-to-t from-canvas-linen via-canvas-linen/95 to-transparent pb-3 md:pb-6 pt-3 pointer-events-none">
-      <div className="max-w-4xl mx-auto px-3 sm:px-6 pointer-events-auto flex flex-col gap-2">
+    <div className="fixed bottom-0 inset-x-0 z-40 bg-gradient-to-t from-canvas-linen via-canvas-linen/95 to-transparent pb-4 md:pb-6 pt-3 pointer-events-none">
+      <div className="max-w-3xl mx-auto px-4 pointer-events-auto flex flex-col gap-2">
         {/* Recommended Inquiries */}
         <PromptChips
           onSelectPrompt={onSelectPrompt}
@@ -49,9 +49,7 @@ export const InputDock: React.FC<InputDockProps> = ({
             <span className="material-symbols-outlined text-[15px] text-gilded-amber">
               attachment
             </span>
-            <span className="font-label text-xs font-medium truncate max-w-[200px]">
-              1 specimen_macro.jpg staged
-            </span>
+            <span className="font-label text-xs font-medium">1 photo staged</span>
             <button
               type="button"
               onClick={onClearStagedImage}
@@ -62,10 +60,10 @@ export const InputDock: React.FC<InputDockProps> = ({
           </div>
         )}
 
-        {/* Main Input Deck */}
+        {/* Input Bar */}
         <form
           onSubmit={handleSubmit}
-          className="bg-surface-card/95 backdrop-blur-md rounded-2xl p-1.5 md:p-2 shadow-lg border border-border-antique flex items-center gap-2"
+          className="bg-surface-card/95 backdrop-blur-md rounded-2xl p-1.5 md:p-2 shadow-sm border border-border-antique flex items-center gap-2"
         >
           {/* Hidden File Picker */}
           <input
@@ -82,15 +80,17 @@ export const InputDock: React.FC<InputDockProps> = ({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               aria-label="Upload Photo"
-              className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-outline hover:text-primary hover:bg-surface-raised transition-colors"
+              title="Upload photo"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-outline hover:text-primary hover:bg-surface-raised transition-colors"
             >
-              <span className="material-symbols-outlined text-[19px]">add</span>
+              <span className="material-symbols-outlined text-[19px]">add_photo_alternate</span>
             </button>
             <button
               type="button"
               onClick={onOpenScanner}
-              aria-label="Open Camera Scanner"
-              className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-outline hover:text-primary hover:bg-surface-raised transition-colors"
+              aria-label="Open Camera"
+              title="Take a photo with camera"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-outline hover:text-primary hover:bg-surface-raised transition-colors"
             >
               <span className="material-symbols-outlined text-[19px]">photo_camera</span>
             </button>
@@ -102,41 +102,24 @@ export const InputDock: React.FC<InputDockProps> = ({
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Inquire about provenance, lot records, or upload high-res macro photos..."
-              className="w-full bg-transparent border-0 outline-none text-on-surface font-body text-xs sm:text-sm md:text-base placeholder:text-outline/70 px-2 py-1.5 focus:ring-0"
+              placeholder="Ask about collectibles, valuation, or upload a photo..."
+              className="w-full bg-transparent border-0 outline-none text-on-surface font-body text-sm md:text-base placeholder:text-outline/60 px-2 py-1.5 focus:ring-0"
               disabled={isLoading}
             />
           </div>
 
-          {/* Right Controls */}
-          <div className="flex items-center gap-1.5 pr-1">
-            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded bg-surface-raised text-on-surface-variant font-label text-[11px] border border-border-antique/50">
-              <span className="material-symbols-outlined text-[13px] text-tertiary">memory</span>
-              <span>Vertex AI 1.5</span>
-            </div>
-
+          {/* Send Button */}
+          <div className="pr-1">
             <button
               type="submit"
               disabled={(!inputText.trim() && !stagedImage) || isLoading}
-              aria-label="Send Inquiry"
-              className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-primary text-on-primary hover:bg-primary-container transition-transform active:scale-95 shadow-md flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+              aria-label="Send"
+              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-primary text-on-primary hover:bg-primary-container transition-transform active:scale-95 shadow-sm flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
             >
-              <span className="material-symbols-outlined text-[18px] md:text-[20px]">arrow_upward</span>
+              <span className="material-symbols-outlined text-[18px]">arrow_upward</span>
             </button>
           </div>
         </form>
-
-        {/* Trust & Encryption Micro-footer */}
-        <div className="flex items-center justify-center gap-2 text-outline font-label text-[10px] md:text-xs text-center pt-0.5">
-          <span className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[12px] text-tertiary">lock</span>
-            End-to-End Encrypted Concierge Vault
-          </span>
-          <span>•</span>
-          <span>Darisi Ver. 3.4.1</span>
-          <span className="hidden sm:inline">•</span>
-          <span className="hidden sm:inline">Strict Horology &amp; Auction Ledger Grade</span>
-        </div>
       </div>
     </div>
   );

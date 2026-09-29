@@ -5,7 +5,6 @@ import { Header } from "../components/Header";
 import { ChatLog } from "../components/ChatLog";
 import { InputDock } from "../components/InputDock";
 import { CameraModal } from "../components/CameraModal";
-import { BottomNav } from "../components/BottomNav";
 import { useChat } from "../hooks/useChat";
 
 export default function Home() {
@@ -38,18 +37,18 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen bg-canvas-linen flex flex-col selection:bg-primary-container selection:text-on-primary">
-      {/* Sticky Header */}
+    <div className="relative min-h-screen bg-canvas-linen flex flex-col selection:bg-primary selection:text-canvas-linen">
+      {/* Header */}
       <Header onOpenScanner={() => setIsScannerOpen(true)} />
 
-      {/* Main Conversation Stream */}
+      {/* Main Chat Stream */}
       <main className="w-full flex-1 flex flex-col items-center">
-        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 pb-48">
+        <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 pt-20 md:pt-24 pb-36">
           <ChatLog messages={messages} />
         </div>
       </main>
 
-      {/* Floating Bottom Input Deck */}
+      {/* Minimal Input Deck */}
       <InputDock
         onSendMessage={sendMessage}
         isLoading={isLoading}
@@ -66,9 +65,6 @@ export default function Home() {
         onClose={() => setIsScannerOpen(false)}
         onCapture={handleCapturePhoto}
       />
-
-      {/* Mobile Bottom Tab Navigation */}
-      <BottomNav />
     </div>
   );
 }
