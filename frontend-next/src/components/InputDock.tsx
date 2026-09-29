@@ -23,7 +23,10 @@ export const InputDock: React.FC<InputDockProps> = ({
   onFileSelect,
 }) => {
   const [inputText, setInputText] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Dedicated Gallery Input (NO capture attribute -> opens Photo Library / Gallery)
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  // Dedicated Camera Input (capture="environment" -> opens phone camera on iOS/Android)
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -34,13 +37,24 @@ export const InputDock: React.FC<InputDockProps> = ({
     onClearStagedImage();
   };
 
+  const handleCameraClick = () => {
+    // If mobile device, directly invoke native camera for 100% reliable shutter capture
+    const isMobile = typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      cameraInputRef.current?.click();
+    } else {
+      // On desktop, open viewfinder modal
+      onOpenScanner();
+    }
+  };
+
   return (
     <div className="fixed bottom-0 inset-x-0 z-40 bg-gradient-to-t from-canvas-linen via-canvas-linen/95 to-transparent pb-4 md:pb-6 pt-3 pointer-events-none">
       <div className="max-w-3xl mx-auto px-4 pointer-events-auto flex flex-col gap-2">
         {/* Recommended Inquiries */}
         <PromptChips
           onSelectPrompt={onSelectPrompt}
-          onOpenScanner={onOpenScanner}
+          onOpenScanner={handleCameraClick}
         />
 
         {/* Staged Attachment Pill */}
@@ -65,34 +79,47 @@ export const InputDock: React.FC<InputDockProps> = ({
           onSubmit={handleSubmit}
           className="bg-surface-card/95 backdrop-blur-md rounded-2xl p-1.5 md:p-2 shadow-sm border border-border-antique flex items-center gap-2"
         >
-          {/* Hidden File Picker */}
+          {/* 1. Dedicated Gallery Picker (strictly NO capture, opens photo library) */}
           <input
-            ref={fileInputRef}
+            ref={galleryInputRef}
             type="file"
             accept="image/*"
             className="hidden"
             onChange={onFileSelect}
           />
 
+          {/* 2. Dedicated Phone Camera Trigger (capture="environment", opens camera directly on iOS & Android) */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={onFileSelect}
+          />
+
           {/* Left Actions */}
-          <div className="flex items-center gap-0.5 pl-1">
+          <div className="flex items-center gap-1 pl-1">
+            {/* Gallery Upload Button */}
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Upload Photo"
-              title="Upload photo"
+              onClick={() => galleryInputRef.current?.click()}
+              aria-label="Upload Photo from Gallery"
+              title="Upload photo from gallery"
               className="w-8 h-8 rounded-xl flex items-center justify-center text-outline hover:text-primary hover:bg-surface-raised transition-colors"
             >
-              <span className="material-symbols-outlined text-[19px]">add_photo_alternate</span>
+              <span className="material-symbols-outlined text-[20px]">photo_library</span>
             </button>
+
+            {/* Camera Button */}
             <button
               type="button"
-              onClick={onOpenScanner}
-              aria-label="Open Camera"
-              title="Take a photo with camera"
+              onClick={handleCameraClick}
+              aria-label="Take Photo with Camera"
+              title="Take photo with camera"
               className="w-8 h-8 rounded-xl flex items-center justify-center text-outline hover:text-primary hover:bg-surface-raised transition-colors"
             >
-              <span className="material-symbols-outlined text-[19px]">photo_camera</span>
+              <span className="material-symbols-outlined text-[20px]">photo_camera</span>
             </button>
           </div>
 
