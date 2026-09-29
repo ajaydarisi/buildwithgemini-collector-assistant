@@ -416,6 +416,12 @@ function formatMarkdown(text) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+  // markdown images: ![alt](url)
+  safe = safe.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g, '<div style="margin:0.75rem 0;"><img src="$2" alt="$1" style="max-width:100%; border-radius:12px; border:1px solid #e7dfcf; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:block;" /></div>');
+  // raw image URLs (ending in .png or .jpg or .jpeg or .webp)
+  safe = safe.replace(/(?<!src=")(https:\/\/storage\.googleapis\.com\/[^\s<>]+\.(?:png|jpg|jpeg|webp))/gi, '<div style="margin:0.75rem 0;"><img src="$1" alt="Showcase Image" style="max-width:100%; border-radius:12px; border:1px solid #e7dfcf; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:block;" /></div>');
+  // markdown links: [text](url)
+  safe = safe.replace(/\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600;">$1</a>');
   // bold
   safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   // italic
