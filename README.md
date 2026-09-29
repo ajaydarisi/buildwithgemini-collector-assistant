@@ -92,13 +92,17 @@ Collector Assistant <img src="./favicon.svg" width="20" height="20" alt="Collect
    - Permanently stores AI-generated showcase imagery, Omni turntable video renderings, and user-captured camera inspection uploads.
    - Generates public URLs (`https://storage.googleapis.com/<bucket>/<object>`) directly embeddable across web and markdown clients.
 
-3. **Client-Side Conversation Storage (Native IndexedDB)**:
-   - Implemented in `frontend-next/src/utils/chatStorage.ts` via the browser's native `IndexedDB` API.
-   - Automatically hydrates previous messages on page load and writes state updates asynchronously.
+3. **Client-Side Conversation & Session Storage (Native IndexedDB v2)**:
+   - Implemented in `frontend-next/src/utils/chatStorage.ts` via the browser's native `IndexedDB` API (`chat_sessions` and `collector_favorites` stores).
+   - **Multi-Session Management**: Allows creating unlimited separate appraisal dialogues via the **"+ New Chat"** action or slide-in **Appraisals Drawer**. Each conversation is preserved independently with automatic smart titling, timestamping, preview snippets, and deletion controls.
    - Overcomes the standard 5MB `localStorage` limit, ensuring base64 photo inspection captures and multi-turn A2UI payload history never trigger `QuotaExceededError`.
-   - Includes a **"New Chat"** reset control in the header to clear client storage on demand.
 
-4. **Service Worker Offline Shell Caching (`sw.js`)**:
+4. **Collector's Vault (Curated Specimen Favorites)**:
+   - Dedicated favorites storage powered by IndexedDB.
+   - Bookmark button on all generative showcase specimens, Omni video renderings, and camera scans.
+   - Slide-over **Collector's Vault** modal with responsive gallery grid, item counter badge, date tracking, removal actions, and fullscreen lightbox zoom viewer.
+
+5. **Service Worker Offline Shell Caching (`sw.js`)**:
    - Pre-caches essential web app assets (HTML, manifest, icons, stylesheets).
    - Network-first strategy with cache fallback for instant navigation.
    - Streaming-safe: explicitly bypasses `/chat` and SSE `/stream` endpoints to guarantee immediate token delivery.
@@ -117,7 +121,8 @@ Collector Assistant <img src="./favicon.svg" width="20" height="20" alt="Collect
 | **Agent Engine Code Sandbox** | ✅ Implemented | Live in `app/agent.py` (`execute_python_in_sandbox`) via `AgentEngineSandboxCodeExecutor` |
 | **Google Maps & Places Tools** | ✅ Implemented | Live in `app/agent.py` (`geocode_address`, `find_nearby_places`) |
 | **A2A Protocol & Chat Web UI** | ✅ Implemented | Live in `frontend/main.py` + `frontend-next/` static export |
-| **Browser-Level Chat Persistence** | ✅ Implemented | Native `IndexedDB` storage (`chatStorage.ts`) + "New Chat" reset action |
+| **Multi-Session Chat & Browser Persistence**| ✅ Implemented | Native `IndexedDB` storage (`chatStorage.ts`), drawer menu, auto-titling, and "+ New Chat" |
+| **Collector's Vault (Image & Media Favorites)** | ✅ Implemented | Interactive bookmarking, gallery modal, lightbox viewer, and persistent local storage |
 | **PWA & Offline Asset Caching** | ✅ Implemented | Web App Manifest (`manifest.json`), gold amphora favicons, and Service Worker (`sw.js`) |
 | **Cross-Session Memory Bank** | ⏳ Planned, not yet implemented | Currently maintains active session context via A2A; long-term cross-session Memory Bank persistence is planned for a future release |
 
