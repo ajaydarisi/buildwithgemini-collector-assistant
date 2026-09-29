@@ -215,6 +215,63 @@
     max-width: 100%;
   }
 
+  /* Chat media rendering (images & videos) */
+  .chat-media-card {
+    margin: 0.85rem 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #111827;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    display: block;
+    max-width: 520px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .chat-media-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+  .chat-image {
+    display: block;
+    width: 100%;
+    max-height: 440px;
+    object-fit: contain;
+    margin: 0 auto;
+    background: #000;
+  }
+  .chat-video {
+    display: block;
+    width: 100%;
+    max-height: 440px;
+    background: #000;
+  }
+  .media-caption {
+    display: block;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.78rem;
+    color: #d1d5db;
+    background: rgba(17, 24, 39, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .chat-link {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .chat-link:hover {
+    color: var(--accent-dark);
+  }
+  .msg-h3, .msg-h4 {
+    margin: 0.85rem 0 0.35rem;
+    color: var(--accent-dark);
+    font-weight: 700;
+  }
+  .msg-li {
+    margin-left: 1.25rem;
+    margin-bottom: 0.25rem;
+  }
+
   /* Interactive Controls Dock */
   .controls-dock {
     background: #ffffff;
@@ -416,19 +473,43 @@ function formatMarkdown(text) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  // markdown images: ![alt](url)
-  safe = safe.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g, '<div style="margin:0.75rem 0;"><img src="$2" alt="$1" style="max-width:100%; border-radius:12px; border:1px solid #e7dfcf; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:block;" /></div>');
-  // raw image URLs (ending in .png or .jpg or .jpeg or .webp)
-  safe = safe.replace(/(?<!src=")(https:\/\/storage\.googleapis\.com\/[^\s<>]+\.(?:png|jpg|jpeg|webp))/gi, '<div style="margin:0.75rem 0;"><img src="$1" alt="Showcase Image" style="max-width:100%; border-radius:12px; border:1px solid #e7dfcf; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:block;" /></div>');
-  // markdown links: [text](url)
-  safe = safe.replace(/\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600;">$1</a>');
-  // bold
+
+  // 1. Extract markdown images: ![alt](url)
+  safe = safe.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g, (match, alt, url) => {
+    if (url.match(/\.(mp4|webm|mov)(\?.*)?$/i)) {
+      return `<div class="chat-media-card"><video controls class="chat-video" src="${url}" preload="metadata"></video><span class="media-caption">🎬 ${alt || "Video Showcase"}</span></div>`;
+    }
+    return `<div class="chat-media-card"><a href="${url}" target="_blank" rel="noopener"><img class="chat-image" src="${url}" alt="${alt || "Showcase"}" loading="lazy" /></a><span class="media-caption">🔍 ${alt || "Click to view full image"}</span></div>`;
+  });
+
+  // 2. Extract standard markdown links: [text](url)
+  safe = safe.replace(/\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g, (match, title, url) => {
+    return `<a class="chat-link" href="${url}" target="_blank" rel="noopener">${title} ↗</a>`;
+  });
+
+  // 3. Any standalone image URLs not already inside an href/src
+  safe = safe.replace(/(?<!["\(=])(https:\/\/storage\.googleapis\.com\/[^\s<>]+\.(?:png|jpg|jpeg|webp|gif))(?!\")/gi, (match, url) => {
+    return `<div class="chat-media-card"><a href="${url}" target="_blank" rel="noopener"><img class="chat-image" src="${url}" alt="Showcase Image" loading="lazy" /></a></div>`;
+  });
+
+  // 4. Any standalone video URLs
+  safe = safe.replace(/(?<!["\(=])(https:\/\/storage\.googleapis\.com\/[^\s<>]+\.(?:mp4|webm))(?!\")/gi, (match, url) => {
+    return `<div class="chat-media-card"><video controls class="chat-video" src="${url}" preload="metadata"></video></div>`;
+  });
+
+  // Headers
+  safe = safe.replace(/^### (.*$)/gim, "<h4 class=\"msg-h4\">$1</h4>");
+  safe = safe.replace(/^## (.*$)/gim, "<h3 class=\"msg-h3\">$1</h3>");
+
+  // Bold & Italic & Code
   safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-  // italic
   safe = safe.replace(/\*(.*?)\*/g, "<em>$1</em>");
-  // inline code
   safe = safe.replace(/`([^`]+)`/g, "<code>$1</code>");
-  // double newlines to paragraph break, single to <br>
+
+  // Unordered list items: lines starting with * or -
+  safe = safe.replace(/^[\*\-] (.*$)/gim, "<li class=\"msg-li\">$1</li>");
+
+  // Paragraphs and breaks
   safe = safe.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br>");
   return "<p>" + safe + "</p>";
 }

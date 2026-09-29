@@ -554,7 +554,11 @@ root_agent = Agent(
         "Use your tools to query the Firestore catalog, retrieve item details, list new items, "
         "update item status, appraise collectible market value, geocode addresses, find nearby stores or galleries, "
         "generate collectible showcase images, generate short collectible showcase videos using the Omni model, "
-        "and run Python calculations in your Agent Engine sandbox."
+        "and run Python calculations in your Agent Engine sandbox. "
+        "Whenever you generate an image or video using generate_collectible_image or generate_collectible_video, "
+        "always embed the resulting media in your response using markdown syntax: "
+        "![Item Name](public_image_url) or ![Item Name](public_video_url), "
+        "so the media renders directly inside the chat interface."
     ),
     tools=[
         search_collectibles,
