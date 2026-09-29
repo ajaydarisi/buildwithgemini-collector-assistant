@@ -4,7 +4,7 @@ import React from "react";
 import { Message } from "../types/chat";
 import { MarkdownContent } from "./MarkdownContent";
 import { A2UIRenderer } from "./A2UIRenderer";
-import { Bot, User, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { User, AlertCircle } from "lucide-react";
 
 interface ChatBubbleProps {
   message: Message;
@@ -26,6 +26,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
     : [];
 
   const combinedText = message.text || textParts.join("\n").trim();
+  const isStreaming = message.status === "sending";
 
   return (
     <div className={`chat-bubble-row ${isUser ? "user" : "agent"}`}>
@@ -60,16 +61,23 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
             </div>
           )}
 
-          {message.status === "sending" && (
+          {isStreaming && !combinedText && (
             <div className="thinking-indicator">
               <span className="dot" />
               <span className="dot" />
               <span className="dot" />
-              <span className="thinking-text">Curating reply…</span>
+              <span className="thinking-text">
+                {message.statusText || "Curating reply…"}
+              </span>
             </div>
           )}
 
-          {combinedText && <MarkdownContent content={combinedText} />}
+          {combinedText && (
+            <div className="streaming-text-container">
+              <MarkdownContent content={combinedText} />
+              {isStreaming && <span className="typing-cursor" />}
+            </div>
+          )}
 
           {a2uiParts.map((a2uiMsgArray, idx) => (
             <A2UIRenderer key={idx} messages={a2uiMsgArray} />
@@ -100,31 +108,33 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
           animation: fadeIn 0.25s ease-out;
         }
         .chat-bubble-row.user {
-          justify-content: flex-end;
+          flex-direction: row-reverse;
         }
         .bubble-avatar {
-          width: 38px;
-          height: 38px;
-          border-radius: 12px;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+          font-size: 1.1rem;
         }
         .agent-avatar {
-          background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-          border: 1.5px solid #d97706;
-          font-size: 1.25rem;
+          background: #fef3c7;
+          border: 1px solid #fde68a;
+          color: #92400e;
         }
         .user-avatar {
-          background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+          background: #78350f;
+          border: 1px solid #b45309;
           color: #ffffff;
         }
         .bubble-wrapper {
+          max-width: 82%;
           display: flex;
           flex-direction: column;
-          max-width: 82%;
         }
         .chat-bubble-row.user .bubble-wrapper {
           align-items: flex-end;
@@ -204,7 +214,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
           height: 7px;
           border-radius: 50%;
           background: #d97706;
-          animation: bounce 1.4s infinite ease-in-out both;
+          animation: pulseDot 1.4s infinite ease-in-out both;
         }
         .dot:nth-child(1) {
           animation-delay: -0.32s;
@@ -212,31 +222,57 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
         .dot:nth-child(2) {
           animation-delay: -0.16s;
         }
-        @keyframes bounce {
-          0%, 80%, 100% {
-            transform: scale(0);
-          }
-          40% {
-            transform: scale(1);
-          }
+        .streaming-text-container {
+          position: relative;
+          display: inline;
+        }
+        .typing-cursor {
+          display: inline-block;
+          width: 8px;
+          height: 15px;
+          background-color: #d97706;
+          margin-left: 4px;
+          vertical-align: middle;
+          border-radius: 2px;
+          animation: blink 0.8s infinite;
         }
         .error-callout {
           display: flex;
           align-items: center;
-          gap: 0.45rem;
-          margin-top: 0.5rem;
-          padding: 0.5rem 0.75rem;
+          gap: 0.5rem;
           background: #fef2f2;
-          border: 1px solid #fecaca;
           color: #dc2626;
-          border-radius: 8px;
-          font-size: 0.82rem;
-          font-weight: 600;
+          padding: 0.6rem 0.8rem;
+          border-radius: 10px;
+          font-size: 0.85rem;
+          margin-top: 0.5rem;
+          border: 1px solid #fee2e2;
+        }
+        @keyframes pulseDot {
+          0%,
+          80%,
+          100% {
+            transform: scale(0);
+            opacity: 0.4;
+          }
+          40% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        @keyframes blink {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0;
+          }
         }
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(6px);
+            transform: translateY(4px);
           }
           to {
             opacity: 1;

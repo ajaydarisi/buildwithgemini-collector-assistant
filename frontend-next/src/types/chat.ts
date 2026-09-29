@@ -18,6 +18,7 @@ export interface Message {
   parts?: ChatPart[];
   timestamp: Date;
   status?: "sending" | "done" | "error";
+  statusText?: string;
   errorMessage?: string;
 }
 

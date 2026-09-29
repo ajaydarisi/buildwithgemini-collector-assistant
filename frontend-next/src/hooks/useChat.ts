@@ -17,7 +17,6 @@ export function useChat() {
   const [userId, setUserId] = useState<string>("collector-user");
 
   useEffect(() => {
-    // Generate or retrieve persistent user ID
     if (typeof window !== "undefined") {
       let storedId = localStorage.getItem("collector_user_id");
       if (!storedId) {
@@ -47,8 +46,11 @@ export function useChat() {
       const tempAgentMessage: Message = {
         id: agentMsgId,
         sender: "agent",
+        text: "",
+        parts: [],
         timestamp: new Date(),
         status: "sending",
+        statusText: "Consulting curator...",
       };
 
       setMessages((prev) => [...prev, userMessage, tempAgentMessage]);
@@ -61,7 +63,7 @@ export function useChat() {
           user_id: userId,
         };
 
-        const res = await fetch("/chat", {
+        const res = await fetch("/chat/stream", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -74,20 +76,84 @@ export function useChat() {
           throw new Error(`Server returned ${res.status}: ${errText}`);
         }
 
-        const data = await res.json();
-        const parts: ChatPart[] = Array.isArray(data.parts) ? data.parts : [];
+        if (!res.body) {
+          throw new Error("No readable stream body returned by server.");
+        }
 
-        setMessages((prev) =>
-          prev.map((msg) => {
-            if (msg.id === agentMsgId) {
-              return {
-                ...msg,
-                parts,
-                status: "done",
-              };
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data:")) continue;
+
+            const jsonStr = trimmed.replace(/^data:\s*/, "");
+            if (!jsonStr) continue;
+
+            try {
+              const event = JSON.parse(jsonStr);
+
+              setMessages((prev) =>
+                prev.map((msg) => {
+                  if (msg.id !== agentMsgId) return msg;
+
+                  if (event.kind === "status") {
+                    return {
+                      ...msg,
+                      statusText: event.text || msg.statusText,
+                    };
+                  } else if (event.kind === "delta") {
+                    const nextText = (msg.text || "") + (event.delta || "");
+                    return {
+                      ...msg,
+                      text: nextText,
+                      statusText: undefined,
+                    };
+                  } else if (event.kind === "a2ui") {
+                    const currentParts = msg.parts ? [...msg.parts] : [];
+                    currentParts.push({ kind: "a2ui", data: event.data });
+                    return {
+                      ...msg,
+                      parts: currentParts,
+                      statusText: undefined,
+                    };
+                  } else if (event.kind === "error") {
+                    return {
+                      ...msg,
+                      status: "error",
+                      errorMessage: event.error || "An error occurred during streaming.",
+                      statusText: undefined,
+                    };
+                  } else if (event.kind === "done") {
+                    return {
+                      ...msg,
+                      status: "done",
+                      statusText: undefined,
+                    };
+                  }
+                  return msg;
+                })
+              );
+            } catch (jsonErr) {
+              console.warn("Failed to parse SSE JSON chunk:", jsonStr, jsonErr);
             }
-            return msg;
-          })
+          }
+        }
+
+        // Finalize done state
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === agentMsgId ? { ...msg, status: "done", statusText: undefined } : msg
+          )
         );
       } catch (err: any) {
         console.error("Failed to send message:", err);
@@ -98,6 +164,7 @@ export function useChat() {
                 ...msg,
                 status: "error",
                 errorMessage: err.message || "Failed to reach agent engine.",
+                statusText: undefined,
               };
             }
             return msg;
