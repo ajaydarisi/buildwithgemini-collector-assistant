@@ -428,8 +428,8 @@ async def generate_collectible_image(
 
 async def generate_collectible_video(
     item_name: str,
-    prompt_description: str,
-    tool_context: ToolContext,
+    prompt_description: str = "A pristine item slowly rotating on a display pedestal under dramatic studio gallery lighting",
+    tool_context: ToolContext = None,
 ) -> dict[str, Any]:
     """Generate a short showcase video for a collectible item using Google's Omni model (gemini-omni-flash-preview) in the global region.
 
@@ -438,15 +438,19 @@ async def generate_collectible_video(
 
     Args:
         item_name: The name of the collectible item (e.g. "1986 Fleer Michael Jordan Rookie Card", "1999 Charizard Holo 1st Edition", "Patek Philippe Nautilus").
-        prompt_description: Detailed visual description of the motion and scene (e.g. "A pristine graded card slowly rotating on a black velvet pedestal under dramatic studio lighting with subtle light reflections").
+        prompt_description: Optional detailed visual description of the motion and scene. Defaults to a studio pedestal rotation.
 
     Returns:
         A dictionary with the item name, artifact filename, and public HTTPS URL of the uploaded video.
     """
-    genai_client = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
+    # Hardcoded public Cloud Storage bucket and project ID
+    bucket_name = "collector-assistant-media-1a63b44d06d9"
+    project_id = "qwiklabs-gcp-04-1a63b44d06d9"
+
+    genai_client = genai.Client(vertexai=True, project=project_id, location="global")
     full_prompt = (
         f"A cinematic high-definition showcase video of rare collectible: {item_name}. "
-        f"{prompt_description}. Smooth continuous motion, photorealistic lighting, dramatic presentation."
+        f"{prompt_description}. Smooth continuous motion, photorealistic lighting, dramatic presentation, 3s."
     )
 
     try:
@@ -489,7 +493,7 @@ async def generate_collectible_video(
     filename = f"{slug}_{uuid.uuid4().hex[:8]}.mp4"
 
     # 1. Save artifact with tool_context.save_artifact for Playground Artifacts panel
-    if tool_context:
+    if tool_context and hasattr(tool_context, "save_artifact"):
         try:
             artifact_part = types.Part.from_bytes(data=video_bytes, mime_type=mime_type)
             await tool_context.save_artifact(filename=filename, artifact=artifact_part)
@@ -499,10 +503,10 @@ async def generate_collectible_video(
     # 2. Upload video bytes directly to public Cloud Storage bucket (no local file)
     try:
         storage_cl = get_storage_client()
-        bucket = storage_cl.bucket(BUCKET_NAME)
+        bucket = storage_cl.bucket(bucket_name)
         blob = bucket.blob(f"videos/{filename}")
         blob.upload_from_string(video_bytes, content_type=mime_type)
-        public_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{blob.name}"
+        public_url = f"https://storage.googleapis.com/{bucket_name}/{blob.name}"
     except Exception as e:
         return {"error": f"Failed to upload video to Cloud Storage: {str(e)}"}
 
