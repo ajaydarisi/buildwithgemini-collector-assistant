@@ -381,6 +381,181 @@
     padding: 0 1.25rem 0.5rem;
   }
 
+  /* Camera Scan & Image Preview Controls */
+  .btn-camera {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0 1.1rem;
+    border-radius: 12px;
+    background: #fffbeb;
+    border: 1.5px solid #fde68a;
+    color: #92400e;
+    font-weight: 700;
+    font-size: 0.92rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  .btn-camera:hover {
+    background: #fef3c7;
+    border-color: #d97706;
+    color: #78350f;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.15);
+  }
+  .image-preview-dock {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    margin: 0.2rem 1.25rem 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 10px;
+  }
+  .image-preview-thumb {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1.5px solid #d97706;
+  }
+  .image-preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .preview-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #78350f;
+  }
+  .preview-sub {
+    font-size: 0.74rem;
+    color: #92400e;
+  }
+  .btn-clear-preview {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: #b45309;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  .btn-clear-preview:hover {
+    background: #fde68a;
+  }
+  .camera-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+  }
+  .camera-modal-card {
+    background: #ffffff;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+  }
+  .camera-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.25rem;
+    background: #fdfbf7;
+    border-bottom: 1px solid #e7dfcf;
+    font-weight: 700;
+    color: #451a03;
+  }
+  .btn-close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0 0.3rem;
+  }
+  .btn-close-modal:hover {
+    color: #111827;
+  }
+  .camera-video-wrap {
+    position: relative;
+    background: #000;
+    width: 100%;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .camera-error-msg {
+    color: #ffffff;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .camera-modal-footer {
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    background: #fdfbf7;
+    border-top: 1px solid #e7dfcf;
+  }
+  .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 0.65rem 1.1rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-secondary:hover {
+    background: #e5e7eb;
+  }
+  .btn-snap {
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.65rem 1.35rem;
+    font-weight: 700;
+    font-size: 0.92rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    box-shadow: 0 3px 8px rgba(180, 83, 9, 0.25);
+    transition: all 0.18s ease;
+  }
+  .btn-snap:hover {
+    background: #92400e;
+    transform: translateY(-1px);
+  }
+
   /* --- A2UI component styles (Card, Column, Row, Text, Divider, List, Image, Icon) --- */
   .a2card {
     border: 1px solid var(--border);
@@ -444,12 +619,25 @@
     <div class="prompt-bar">
       <div class="prompt-label">💡 Suggestions:</div>
       <div id="example-prompts">
+        <button type="button" class="prompt-chip" onclick="openCamera()">📷 Scan with camera</button>
         <button type="button" class="prompt-chip" onclick="sendMessage('Show rare trading cards in the catalog')">🃏 Show rare trading cards</button>
         <button type="button" class="prompt-chip" onclick="sendMessage('Generate a showcase image for a 1986 Fleer Michael Jordan rookie card')">🎨 Generate showcase image</button>
         <button type="button" class="prompt-chip" onclick="sendMessage('Calculate CAGR if bought at $5,000 and sold at $18,500 over 15 years')">📈 Calculate 15-yr CAGR</button>
       </div>
     </div>
+    <div id="image-preview-dock" class="image-preview-dock" style="display:none;">
+      <img id="image-preview-thumb" class="image-preview-thumb" src="" alt="Snapshot Preview" />
+      <div class="image-preview-info">
+        <span class="preview-title">Photo attached for inspection</span>
+        <span class="preview-sub">Collector Assistant will check if it is a collectible</span>
+      </div>
+      <button type="button" id="btn-clear-image" class="btn-clear-preview" title="Remove photo">&times;</button>
+    </div>
     <form id="form">
+      <button type="button" id="btn-camera" class="btn-camera" title="Scan item with camera or upload photo">
+        <span>📷</span>
+        <span>Scan</span>
+      </button>
       <input id="input" placeholder="Inquire about items, market prices, or generate showcase art…" autocomplete="off" autofocus>
       <button class="send-btn" type="submit">
         <span>Send</span>
@@ -459,6 +647,36 @@
     <div class="footer-caption">Powered by Gemini 2.5 Flash on Vertex AI Agent Runtime</div>
   </div>
 </div>
+
+<!-- Camera Modal -->
+<div id="camera-modal" class="camera-modal-overlay" style="display:none;">
+  <div class="camera-modal-card">
+    <div class="camera-modal-header">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <span style="font-size:1.25rem;">📷</span>
+        <span>Scan Item with Camera</span>
+      </div>
+      <button type="button" id="btn-close-modal" class="btn-close-modal" title="Close">&times;</button>
+    </div>
+    <div class="camera-video-wrap">
+      <video id="camera-video" class="camera-video" autoplay playsinline muted></video>
+      <div id="camera-error-msg" class="camera-error-msg" style="display:none;">
+        <p style="margin:0 0 0.5rem; font-weight:700; font-size:1rem;">Camera Unavailable</p>
+        <p style="font-size:0.85rem; color:#d1d5db; margin:0 0 1rem; max-width:320px;">No webcam was detected or permission was not granted. You can select an image file instead.</p>
+        <button type="button" id="btn-fallback-upload" class="btn-snap" style="margin:0 auto; padding:0.5rem 1.1rem; font-size:0.88rem;">📁 Choose Image File</button>
+      </div>
+    </div>
+    <div class="camera-modal-footer">
+      <button type="button" id="btn-file-select" class="btn-secondary">📁 Upload File</button>
+      <button type="button" id="btn-snap" class="btn-snap">
+        <span>📸</span>
+        <span>Take Snapshot</span>
+      </button>
+    </div>
+  </div>
+</div>
+<canvas id="camera-canvas" style="display:none;"></canvas>
+<input type="file" id="file-input" accept="image/*" capture="environment" style="display:none;">
 
 <script>
 const log = document.getElementById("log");
@@ -669,16 +887,140 @@ function renderReply(b, parts) {
   log.scrollTop = log.scrollHeight;
 }
 
+let currentImageData = null;
+let cameraStream = null;
+
+const cameraModal = document.getElementById("camera-modal");
+const cameraVideo = document.getElementById("camera-video");
+const cameraCanvas = document.getElementById("camera-canvas");
+const cameraErrorMsg = document.getElementById("camera-error-msg");
+const fileInput = document.getElementById("file-input");
+const btnCamera = document.getElementById("btn-camera");
+const btnSnap = document.getElementById("btn-snap");
+const btnCloseModal = document.getElementById("btn-close-modal");
+const btnFileSelect = document.getElementById("btn-file-select");
+const btnFallbackUpload = document.getElementById("btn-fallback-upload");
+const previewDock = document.getElementById("image-preview-dock");
+const previewThumb = document.getElementById("image-preview-thumb");
+const btnClearImage = document.getElementById("btn-clear-image");
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  if (cameraVideo) cameraVideo.srcObject = null;
+}
+
+async function openCamera() {
+  cameraModal.style.display = "flex";
+  cameraErrorMsg.style.display = "none";
+  cameraVideo.style.display = "block";
+  btnSnap.disabled = false;
+
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error("Camera API not available in this browser");
+    }
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    cameraVideo.srcObject = cameraStream;
+  } catch (err) {
+    console.warn("Camera access failed or unavailable:", err);
+    cameraVideo.style.display = "none";
+    cameraErrorMsg.style.display = "block";
+    btnSnap.disabled = true;
+  }
+}
+
+function closeCamera() {
+  stopCamera();
+  cameraModal.style.display = "none";
+}
+
+function setCapturedImage(dataUrl) {
+  currentImageData = dataUrl;
+  previewThumb.src = dataUrl;
+  previewDock.style.display = "flex";
+  closeCamera();
+  input.placeholder = "Ask about this item or leave blank to check if collectible…";
+  input.focus();
+}
+
+if (btnCamera) btnCamera.onclick = openCamera;
+if (btnCloseModal) btnCloseModal.onclick = closeCamera;
+if (btnFileSelect) btnFileSelect.onclick = () => fileInput.click();
+if (btnFallbackUpload) btnFallbackUpload.onclick = () => fileInput.click();
+
+if (fileInput) {
+  fileInput.onchange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      setCapturedImage(evt.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+}
+
+if (btnSnap) {
+  btnSnap.onclick = () => {
+    if (!cameraVideo.videoWidth) return;
+    cameraCanvas.width = cameraVideo.videoWidth;
+    cameraCanvas.height = cameraVideo.videoHeight;
+    const ctx = cameraCanvas.getContext("2d");
+    ctx.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+    const dataUrl = cameraCanvas.toDataURL("image/jpeg", 0.88);
+    setCapturedImage(dataUrl);
+  };
+}
+
+if (btnClearImage) {
+  btnClearImage.onclick = () => {
+    currentImageData = null;
+    previewThumb.src = "";
+    previewDock.style.display = "none";
+    input.placeholder = "Inquire about items, market prices, or generate showcase art…";
+  };
+}
+
 async function sendMessage(text) {
-  if (!text) return;
+  const attachedImage = currentImageData;
+  if (!text && !attachedImage) return;
+
   const userBubble = bubble("user");
-  const userText = el("div", "msg-text");
-  userText.textContent = text;
-  userBubble.appendChild(userText);
+  const userContent = el("div", "msg-text");
+
+  if (attachedImage) {
+    const imgWrap = el("div", "chat-media-card");
+    const previewImg = el("img", "chat-image");
+    previewImg.src = attachedImage;
+    previewImg.alt = "Attached Photo";
+    imgWrap.appendChild(previewImg);
+    userContent.appendChild(imgWrap);
+  }
+  if (text) {
+    const p = el("p", null, text);
+    userContent.appendChild(p);
+  }
+  userBubble.appendChild(userContent);
+
+  // Clear inputs
   input.value = "";
+  if (attachedImage) {
+    btnClearImage.click();
+  }
+
   const b = bubble("agent"); b.textContent = "…";
   try {
-    const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text }) });
+    const payload = { message: text, image_data: attachedImage };
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
     const raw = await res.text();
     let data;
     try { data = JSON.parse(raw); }
@@ -687,13 +1029,14 @@ async function sendMessage(text) {
   } catch (e) {
     b.textContent = "Error: " + e.message;
   }
+  log.scrollTop = log.scrollHeight;
 }
 
 // The proxy returns { parts: [{kind:"text",text} | {kind:"a2ui",data}] }.
 form.addEventListener("submit", (ev) => {
   ev.preventDefault();
   const text = input.value.trim();
-  if (text) sendMessage(text);
+  if (text || currentImageData) sendMessage(text);
 });
 </script>
 </body>

@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import base64
+import json
 import os
 import re
 from typing import Any
@@ -540,6 +541,61 @@ def execute_python_in_sandbox(code: str) -> dict[str, Any]:
         return {"error": f"Failed to execute code in sandbox: {str(e)}"}
 
 
+def verify_and_inspect_collectible(image_url: str) -> dict[str, Any]:
+    """Inspect a photo of an item (e.g. captured by camera or uploaded) and determine whether it is a collectible or not.
+
+    Uses multimodal computer vision to examine physical indicators, grading slabs, authenticity markers,
+    condition attributes, and model details to determine if the item belongs to a collectible category
+    (trading cards, vintage watches, sneakers, retro video games, coins, comic books, vinyl records, memorabilia, antiques)
+    or is an everyday non-collectible item.
+
+    Args:
+        image_url: Public HTTPS URL or Cloud Storage URL of the image to inspect.
+
+    Returns:
+        A dictionary with is_collectible (bool), category, confidence, identified_item, condition_indicators,
+        verdict_explanation, and suggested_action.
+    """
+    try:
+        resp = requests.get(image_url, timeout=15)
+        resp.raise_for_status()
+        image_bytes = resp.content
+        mime_type = resp.headers.get("Content-Type", "image/jpeg").split(";")[0]
+    except Exception as e:
+        return {"error": f"Failed to fetch image from URL: {str(e)}"}
+
+    try:
+        genai_client = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
+        prompt = (
+            "Examine this image carefully as an expert collectible authentication & appraisal specialist. "
+            "Determine whether the object shown is a collectible (such as a rare sports/trading card, vintage luxury watch, "
+            "collectible sneaker, retro video game, coin/bullion, comic book, vinyl record, sports memorabilia, or historical antique) "
+            "or an everyday non-collectible item (such as an office supply, plain utensil, modern furniture, or general commodity).\n\n"
+            "Return valid JSON with the following schema:\n"
+            "{\n"
+            '  "is_collectible": true | false,\n'
+            '  "category": "Trading Card" | "Vintage Watch" | "Sneaker" | "Retro Game" | "Coin" | "Vinyl Record" | "Other Collectible" | "Not a Collectible",\n'
+            '  "confidence": float between 0.0 and 1.0,\n'
+            '  "identified_item": "Detailed name / model / edition / year if identifiable",\n'
+            '  "condition_indicators": ["centering", "corners", "patina", "box condition", etc.],\n'
+            '  "verdict_explanation": "Clear explanation of why this is or is not classified as a collectible, and notable visual attributes.",\n'
+            '  "suggested_action": "Recommended next steps (e.g. estimate market value, check catalog comps, get professionally graded, or keep as personal souvenir)."\n'
+            "}"
+        )
+        part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+        response = genai_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[part, prompt],
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        )
+        analysis = json.loads(response.text)
+        analysis["status"] = "success"
+        analysis["image_url"] = image_url
+        return analysis
+    except Exception as e:
+        return {"error": f"Multimodal analysis failed: {str(e)}"}
+
+
 root_agent = Agent(
     name="root_agent",
     model=Gemini(
@@ -554,6 +610,7 @@ root_agent = Agent(
         "Use your tools to query the Firestore catalog, retrieve item details, list new items, "
         "update item status, appraise collectible market value, geocode addresses, find nearby stores or galleries, "
         "generate collectible showcase images, generate short collectible showcase videos using the Omni model, "
+        "inspect user-provided photos or camera snapshots with verify_and_inspect_collectible to determine whether an item is a collectible, "
         "and run Python calculations in your Agent Engine sandbox. "
         "Whenever you generate an image or video using generate_collectible_image or generate_collectible_video, "
         "always embed the resulting media in your response using markdown syntax: "
@@ -570,6 +627,7 @@ root_agent = Agent(
         find_nearby_places,
         generate_collectible_image,
         generate_collectible_video,
+        verify_and_inspect_collectible,
         execute_python_in_sandbox,
     ],
 )

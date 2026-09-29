@@ -24,11 +24,13 @@ Run:
   python main.py                 # -> http://localhost:8080
 """
 
+import base64
 import os
 import uuid
 
 import google.auth
 import google.auth.transport.requests
+from google.cloud import storage
 import httpx
 from a2a.client import ClientConfig, ClientFactory
 from a2a.types import (
@@ -144,8 +146,39 @@ def _extract_parts(parts: list) -> list[dict]:
 async def chat(req: Request):
     body = await req.json()
     message = body.get("message", "")
+    image_data = body.get("image_data")
     user_id = body.get("user_id") or "web-user"
     parts: list[dict] = []
+
+    uploaded_image_url = None
+    if image_data:
+        try:
+            header, encoded = image_data.split(",", 1) if "," in image_data else ("", image_data)
+            img_bytes = base64.b64decode(encoded)
+            mime_type = "image/jpeg"
+            ext = "jpg"
+            if "image/png" in header:
+                mime_type = "image/png"
+                ext = "png"
+            elif "image/webp" in header:
+                mime_type = "image/webp"
+                ext = "webp"
+
+            storage_client = storage.Client(credentials=_creds, project="qwiklabs-gcp-04-1a63b44d06d9")
+            bucket_name = "collector-assistant-media-1a63b44d06d9"
+            bucket = storage_client.bucket(bucket_name)
+            filename = f"uploads/camera_{uuid.uuid4().hex[:8]}.{ext}"
+            blob = bucket.blob(filename)
+            blob.upload_from_string(img_bytes, content_type=mime_type)
+            uploaded_image_url = f"https://storage.googleapis.com/{bucket_name}/{filename}"
+
+            camera_note = f"I captured a photo of an item using my camera: {uploaded_image_url}\n"
+            if message:
+                message = f"{camera_note}{message}\nPlease use verify_and_inspect_collectible to evaluate whether this item is a collectible or not, identify its category and condition, and provide your verdict."
+            else:
+                message = f"{camera_note}Please inspect this photo with verify_and_inspect_collectible: check if it is a collectible or not, identify its category and condition, and provide your verdict."
+        except Exception as e:
+            print(f"Failed to upload camera image: {e}")
 
     async with httpx.AsyncClient(headers=_auth_headers(), timeout=120) as client:
         card = await _get_card(client)
