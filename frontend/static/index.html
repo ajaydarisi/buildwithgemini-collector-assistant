@@ -19,9 +19,12 @@
   .msg.user .bubble { background:var(--accent); color:#fff; border:none; }
   /* When the reply is an A2UI card, drop the bubble chrome so the card stands alone. */
   .bubble.rich { background:transparent; border:none; padding:0; max-width:100%; white-space:normal; }
-  form { display:flex; gap:.5rem; padding:1rem; border-top:1px solid var(--border); background:#fff; }
+  #example-prompts { display:flex; gap:.5rem; padding:.6rem 1rem 0; border-top:1px solid var(--border); background:#fff; overflow-x:auto; }
+  .prompt-chip { background:#fef3c7; border:1px solid var(--border); color:#92400e; font-size:.82rem; font-weight:600; padding:.4rem .8rem; border-radius:9999px; cursor:pointer; white-space:nowrap; transition:all .15s ease; }
+  .prompt-chip:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+  form { display:flex; gap:.5rem; padding:.6rem 1rem 1rem; border-top:none; background:#fff; }
   input { flex:1; padding:.7rem; border:1px solid var(--border); border-radius:8px; font-size:1rem; }
-  button { padding:.7rem 1.1rem; border:none; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  form button.send-btn { padding:.7rem 1.1rem; border:none; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
 
   /* --- A2UI component styles (Card, Column, Row, Text, Divider, List, Image, Icon) --- */
   .a2card { border:1px solid var(--border); border-radius:12px; padding:1rem; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.06); max-width:100%; }
@@ -43,9 +46,14 @@
 <body>
 <header>🏺 Collector Assistant</header>
 <div id="log"></div>
+<div id="example-prompts">
+  <button type="button" class="prompt-chip" onclick="sendMessage('Show rare trading cards in the catalog')">🃏 Show rare trading cards</button>
+  <button type="button" class="prompt-chip" onclick="sendMessage('Generate a showcase image for a 1986 Fleer Michael Jordan rookie card')">🎨 Generate showcase image</button>
+  <button type="button" class="prompt-chip" onclick="sendMessage('Calculate CAGR if bought at $5,000 and sold at $18,500 over 15 years')">📈 Calculate 15-yr CAGR</button>
+</div>
 <form id="form">
   <input id="input" placeholder="Ask something…" autocomplete="off" autofocus>
-  <button>Send</button>
+  <button class="send-btn">Send</button>
 </form>
 
 <script>
@@ -181,10 +189,7 @@ function renderReply(b, parts) {
   log.scrollTop = log.scrollHeight;
 }
 
-// The proxy returns { parts: [{kind:"text",text} | {kind:"a2ui",data}] }.
-form.addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  const text = input.value.trim();
+async function sendMessage(text) {
   if (!text) return;
   bubble("user").textContent = text;
   input.value = "";
@@ -202,6 +207,13 @@ form.addEventListener("submit", async (ev) => {
   } catch (e) {
     b.textContent = "Error: " + e.message;
   }
+}
+
+// The proxy returns { parts: [{kind:"text",text} | {kind:"a2ui",data}] }.
+form.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const text = input.value.trim();
+  if (text) sendMessage(text);
 });
 </script>
 </body>
