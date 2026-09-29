@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base64
 import os
 import re
 from typing import Any
@@ -33,6 +34,7 @@ load_dotenv()
 
 MODEL = "gemini-3.6-flash"
 IMAGE_MODEL = "gemini-3.1-flash-lite-image"
+VIDEO_MODEL = "gemini-omni-flash-preview"
 
 # Hardcoded project ID as required (avoiding google.auth.default() / GOOGLE_CLOUD_PROJECT project number issues)
 PROJECT_ID = "qwiklabs-gcp-04-1a63b44d06d9"
@@ -423,6 +425,94 @@ async def generate_collectible_image(
     }
 
 
+async def generate_collectible_video(
+    item_name: str,
+    prompt_description: str,
+    tool_context: ToolContext,
+) -> dict[str, Any]:
+    """Generate a short showcase video for a collectible item using Google's Omni model (gemini-omni-flash-preview) in the global region.
+
+    The generated video is saved to session artifacts for the Playground's Artifacts panel,
+    and uploaded to Cloud Storage to produce a public https URL.
+
+    Args:
+        item_name: The name of the collectible item (e.g. "1986 Fleer Michael Jordan Rookie Card", "1999 Charizard Holo 1st Edition", "Patek Philippe Nautilus").
+        prompt_description: Detailed visual description of the motion and scene (e.g. "A pristine graded card slowly rotating on a black velvet pedestal under dramatic studio lighting with subtle light reflections").
+
+    Returns:
+        A dictionary with the item name, artifact filename, and public HTTPS URL of the uploaded video.
+    """
+    genai_client = genai.Client(vertexai=True, project=PROJECT_ID, location="global")
+    full_prompt = (
+        f"A cinematic high-definition showcase video of rare collectible: {item_name}. "
+        f"{prompt_description}. Smooth continuous motion, photorealistic lighting, dramatic presentation."
+    )
+
+    try:
+        interaction = genai_client.interactions.create(
+            model=VIDEO_MODEL,
+            input=full_prompt,
+        )
+    except Exception as e:
+        return {"error": f"Video generation failed: {str(e)}"}
+
+    video_data = None
+    mime_type = "video/mp4"
+
+    if hasattr(interaction, "output_video") and interaction.output_video:
+        video_data = getattr(interaction.output_video, "data", None)
+        if getattr(interaction.output_video, "mime_type", None):
+            mime_type = interaction.output_video.mime_type
+    elif hasattr(interaction, "steps"):
+        for step in getattr(interaction, "steps", []):
+            for content in getattr(step, "content", []):
+                if getattr(content, "type", None) == "video" or hasattr(content, "data"):
+                    video_data = getattr(content, "data", None)
+                    if getattr(content, "mime_type", None):
+                        mime_type = content.mime_type
+                    break
+            if video_data:
+                break
+
+    if not video_data:
+        return {"error": "No video data was returned by the Omni model."}
+
+    if isinstance(video_data, str):
+        video_bytes = base64.b64decode(video_data)
+    elif isinstance(video_data, bytes):
+        video_bytes = video_data
+    else:
+        return {"error": f"Unexpected video data format: {type(video_data)}"}
+
+    slug = re.sub(r"[^a-z0-9]+", "_", item_name.lower()).strip("_")[:30]
+    filename = f"{slug}_{uuid.uuid4().hex[:8]}.mp4"
+
+    # 1. Save artifact with tool_context.save_artifact for Playground Artifacts panel
+    if tool_context:
+        try:
+            artifact_part = types.Part.from_bytes(data=video_bytes, mime_type=mime_type)
+            await tool_context.save_artifact(filename=filename, artifact=artifact_part)
+        except Exception as e:
+            print(f"Warning: Failed to save video artifact in tool_context: {e}")
+
+    # 2. Upload video bytes directly to public Cloud Storage bucket (no local file)
+    try:
+        storage_cl = get_storage_client()
+        bucket = storage_cl.bucket(BUCKET_NAME)
+        blob = bucket.blob(f"videos/{filename}")
+        blob.upload_from_string(video_bytes, content_type=mime_type)
+        public_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{blob.name}"
+    except Exception as e:
+        return {"error": f"Failed to upload video to Cloud Storage: {str(e)}"}
+
+    return {
+        "status": "success",
+        "item_name": item_name,
+        "artifact_filename": filename,
+        "public_video_url": public_url,
+    }
+
+
 def execute_python_in_sandbox(code: str) -> dict[str, Any]:
     """Execute Python code safely inside the Agent Engine sandbox and return the stdout output and results.
 
@@ -463,7 +553,8 @@ root_agent = Agent(
         "(such as trading cards, sneakers, vintage watches, retro video games, and vinyl records). "
         "Use your tools to query the Firestore catalog, retrieve item details, list new items, "
         "update item status, appraise collectible market value, geocode addresses, find nearby stores or galleries, "
-        "generate collectible showcase images, and run Python calculations in your Agent Engine sandbox."
+        "generate collectible showcase images, generate short collectible showcase videos using the Omni model, "
+        "and run Python calculations in your Agent Engine sandbox."
     ),
     tools=[
         search_collectibles,
@@ -474,6 +565,7 @@ root_agent = Agent(
         geocode_address,
         find_nearby_places,
         generate_collectible_image,
+        generate_collectible_video,
         execute_python_in_sandbox,
     ],
 )
