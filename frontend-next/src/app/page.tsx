@@ -1,106 +1,74 @@
 "use client";
 
 import React, { useState } from "react";
-import { AuroraBackground } from "../components/reactbits/AuroraBackground";
 import { Header } from "../components/Header";
 import { ChatLog } from "../components/ChatLog";
-import { PromptChips } from "../components/PromptChips";
-import { AttachmentPreview } from "../components/AttachmentPreview";
 import { InputDock } from "../components/InputDock";
 import { CameraModal } from "../components/CameraModal";
+import { BottomNav } from "../components/BottomNav";
 import { useChat } from "../hooks/useChat";
 
 export default function Home() {
   const { messages, isLoading, sendMessage } = useChat();
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [stagedImage, setStagedImage] = useState<string | null>(null);
 
-  const handleOpenScanner = () => {
-    setIsCameraOpen(true);
-  };
-
-  const handleCloseScanner = () => {
-    setIsCameraOpen(false);
-  };
-
-  const handleCaptureSnapshot = (dataUrl: string) => {
+  const handleCapturePhoto = (dataUrl: string) => {
     setStagedImage(dataUrl);
+    setIsScannerOpen(false);
   };
 
-  const handleClearStagedImage = () => {
-    setStagedImage(null);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setStagedImage(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
-  const handleSendMessage = (text: string) => {
-    sendMessage(text, stagedImage);
-    setStagedImage(null);
-  };
-
-  const handleSelectPrompt = (promptText: string) => {
-    sendMessage(promptText, stagedImage);
+  const handleSelectPrompt = (prompt: string) => {
+    sendMessage(prompt, stagedImage);
     setStagedImage(null);
   };
 
   return (
-    <AuroraBackground>
-      <div className="main-layout-root">
-        <Header onOpenScanner={handleOpenScanner} />
+    <div className="relative min-h-screen bg-canvas-linen flex flex-col selection:bg-primary-container selection:text-on-primary">
+      {/* Sticky Header */}
+      <Header onOpenScanner={() => setIsScannerOpen(true)} />
 
-        <main className="chat-container">
+      {/* Main Conversation Stream */}
+      <main className="w-full flex-1 flex flex-col items-center">
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 pb-48">
           <ChatLog messages={messages} />
-        </main>
+        </div>
+      </main>
 
-        <footer className="footer-controls">
-          <AttachmentPreview
-            imageData={stagedImage}
-            onClear={handleClearStagedImage}
-          />
-          <PromptChips
-            onSelectPrompt={handleSelectPrompt}
-            onOpenScanner={handleOpenScanner}
-            disabled={isLoading}
-          />
-          <InputDock
-            onSendMessage={handleSendMessage}
-            onOpenScanner={handleOpenScanner}
-            isLoading={isLoading}
-            hasAttachment={!!stagedImage}
-          />
-        </footer>
+      {/* Floating Bottom Input Deck */}
+      <InputDock
+        onSendMessage={sendMessage}
+        isLoading={isLoading}
+        stagedImage={stagedImage}
+        onClearStagedImage={() => setStagedImage(null)}
+        onOpenScanner={() => setIsScannerOpen(true)}
+        onSelectPrompt={handleSelectPrompt}
+        onFileSelect={handleFileSelect}
+      />
 
-        <CameraModal
-          isOpen={isCameraOpen}
-          onClose={handleCloseScanner}
-          onCapture={handleCaptureSnapshot}
-        />
-      </div>
+      {/* Camera Viewfinder Modal */}
+      <CameraModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onCapture={handleCapturePhoto}
+      />
 
-      <style jsx>{`
-        .main-layout-root {
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-          height: 100dvh;
-          width: 100%;
-          overflow: hidden;
-        }
-        .chat-container {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          position: relative;
-        }
-        .footer-controls {
-          display: flex;
-          flex-direction: column;
-          background: rgba(253, 251, 247, 0.92);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-top: 1px solid rgba(231, 223, 207, 0.8);
-          z-index: 20;
-        }
-      `}</style>
-    </AuroraBackground>
+      {/* Mobile Bottom Tab Navigation */}
+      <BottomNav />
+    </div>
   );
 }
