@@ -3,58 +3,405 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Collector Assistant</title>
-<!-- Optional: used only to draw A2UI Icon components. If it can't load (offline/
-     corp network), icons fall back to showing their name as text. -->
+<title>Collector Assistant — Rare & Vintage Marketplace Curator</title>
+<!-- Optional: used only to draw A2UI Icon components -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
 <style>
-  :root { --accent:#b45309; --bg:#fbfbfb; --border:#e5e7eb; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); display:flex; flex-direction:column; height:100vh; }
-  header { background:var(--accent); color:#fff; padding:.9rem 1.2rem; font-weight:700; }
-  #log { flex:1; overflow-y:auto; padding:1.2rem; max-width:780px; width:100%; margin:0 auto; }
-  .msg { margin:.6rem 0; }
-  .msg.user { text-align:right; }
-  .bubble { display:inline-block; padding:.6rem .9rem; border-radius:12px; background:#fff; border:1px solid var(--border); text-align:left; max-width:90%; white-space:pre-wrap; }
-  .msg.user .bubble { background:var(--accent); color:#fff; border:none; }
-  /* When the reply is an A2UI card, drop the bubble chrome so the card stands alone. */
-  .bubble.rich { background:transparent; border:none; padding:0; max-width:100%; white-space:normal; }
-  #example-prompts { display:flex; gap:.5rem; padding:.6rem 1rem 0; border-top:1px solid var(--border); background:#fff; overflow-x:auto; }
-  .prompt-chip { background:#fef3c7; border:1px solid var(--border); color:#92400e; font-size:.82rem; font-weight:600; padding:.4rem .8rem; border-radius:9999px; cursor:pointer; white-space:nowrap; transition:all .15s ease; }
-  .prompt-chip:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
-  form { display:flex; gap:.5rem; padding:.6rem 1rem 1rem; border-top:none; background:#fff; }
-  input { flex:1; padding:.7rem; border:1px solid var(--border); border-radius:8px; font-size:1rem; }
-  form button.send-btn { padding:.7rem 1.1rem; border:none; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  :root {
+    --accent: #b45309;
+    --accent-dark: #92400e;
+    --accent-light: #fef3c7;
+    --accent-glow: rgba(180, 83, 9, 0.15);
+    --bg: #fcfaf7;
+    --card-bg: #ffffff;
+    --border: #e7dfcf;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, #78350f 0%, #b45309 50%, #d97706 100%);
+    color: #fff;
+    padding: 0.85rem 1.5rem;
+    box-shadow: 0 2px 10px rgba(120, 53, 15, 0.25);
+    z-index: 10;
+  }
+  .header-content {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .brand-avatar {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  }
+  .brand-text h1 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand-text p {
+    margin: 0.15rem 0 0;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    font-weight: 400;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.3rem 0.65rem;
+    border-radius: 9999px;
+    font-weight: 600;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: #34d399;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #34d399;
+  }
+
+  /* Chat Log / Dialogue Canvas */
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1rem;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .msg {
+    display: flex;
+    gap: 0.75rem;
+    max-width: 86%;
+    animation: fadeIn 0.25s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.agent {
+    align-self: flex-start;
+  }
+  .msg.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  }
+  .agent-avatar {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+  }
+  .user-avatar {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+  }
+
+  .msg-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .msg.user .msg-content {
+    align-items: flex-end;
+  }
+
+  .sender-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-left: 0.25rem;
+    margin-bottom: 0.15rem;
+  }
+  .msg.user .sender-name {
+    margin-right: 0.25rem;
+    margin-left: 0;
+  }
+
+  .bubble {
+    display: inline-block;
+    padding: 0.85rem 1.15rem;
+    border-radius: 16px;
+    font-size: 0.94rem;
+    line-height: 1.6;
+    max-width: 100%;
+    word-break: break-word;
+  }
+  .msg.agent .bubble {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-top-left-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+    color: #ffffff;
+    border-top-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(180, 83, 9, 0.25);
+  }
+
+  .msg-text p {
+    margin: 0 0 0.6rem;
+  }
+  .msg-text p:last-child {
+    margin-bottom: 0;
+  }
+  .msg-text code {
+    background: rgba(0,0,0,0.06);
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.88em;
+  }
+  .msg.user .msg-text code {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+  }
+
+  /* When the reply is an A2UI card, drop the bubble chrome */
+  .bubble.rich {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100%;
+  }
+
+  /* Interactive Controls Dock */
+  .controls-dock {
+    background: #ffffff;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
+    z-index: 10;
+  }
+  .dock-inner {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* Suggested Prompts */
+  .prompt-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.25rem 0.2rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .prompt-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+  #example-prompts {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+  .prompt-chip {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.8rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .prompt-chip:hover {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(180, 83, 9, 0.2);
+  }
+
+  /* Input form */
+  form {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.5rem 1.25rem 0.5rem;
+  }
+  input {
+    flex: 1;
+    padding: 0.8rem 1.1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.96rem;
+    background: #faf8f5;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  form button.send-btn {
+    padding: 0.8rem 1.4rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.94rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.18s ease;
+    box-shadow: 0 2px 6px rgba(180, 83, 9, 0.25);
+  }
+  form button.send-btn:hover {
+    background: linear-gradient(135deg, #92400e 0%, #b45309 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(180, 83, 9, 0.35);
+  }
+
+  .footer-caption {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    padding: 0 1.25rem 0.5rem;
+  }
 
   /* --- A2UI component styles (Card, Column, Row, Text, Divider, List, Image, Icon) --- */
-  .a2card { border:1px solid var(--border); border-radius:12px; padding:1rem; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.06); max-width:100%; }
-  .a2card + .a2card, .a2col > .a2card { margin-top:.6rem; }
-  .a2col { display:flex; flex-direction:column; gap:.4rem; }
-  .a2row { display:flex; flex-direction:row; gap:.6rem; align-items:center; flex-wrap:wrap; }
-  .a2row.between { justify-content:space-between; }
-  .a2text { margin:0; line-height:1.4; }
-  .a2text.a2-h1 { font-size:1.5rem; font-weight:700; }
-  .a2text.a2-h2 { font-size:1.25rem; font-weight:700; }
-  .a2text.a2-h3 { font-size:1.1rem; font-weight:600; }
-  .a2text.a2-h4 { font-size:1rem; font-weight:600; }
-  .a2text.a2-caption { font-size:.85rem; color:#666; }
-  .a2divider { border:none; border-top:1px solid var(--border); margin:.4rem 0; width:100%; }
-  .a2img { max-width:100%; border-radius:8px; display:block; }
-  .material-symbols-outlined { font-family:'Material Symbols Outlined'; font-size:1.25rem; line-height:1; vertical-align:middle; color:var(--accent); }
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    max-width: 100%;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 0.6rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.45rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.65rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.45; }
+  .a2text.a2-h1 { font-size: 1.45rem; font-weight: 700; color: #78350f; }
+  .a2text.a2-h2 { font-size: 1.25rem; font-weight: 700; color: #78350f; }
+  .a2text.a2-h3 { font-size: 1.1rem; font-weight: 600; }
+  .a2text.a2-h4 { font-size: 1rem; font-weight: 600; }
+  .a2text.a2-caption { font-size: 0.85rem; color: #666; }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.4rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 10px; display: block; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.25rem; line-height: 1; vertical-align: middle; color: var(--accent); }
 </style>
 </head>
 <body>
-<header>🏺 Collector Assistant</header>
-<div id="log"></div>
-<div id="example-prompts">
-  <button type="button" class="prompt-chip" onclick="sendMessage('Show rare trading cards in the catalog')">🃏 Show rare trading cards</button>
-  <button type="button" class="prompt-chip" onclick="sendMessage('Generate a showcase image for a 1986 Fleer Michael Jordan rookie card')">🎨 Generate showcase image</button>
-  <button type="button" class="prompt-chip" onclick="sendMessage('Calculate CAGR if bought at $5,000 and sold at $18,500 over 15 years')">📈 Calculate 15-yr CAGR</button>
+
+<header>
+  <div class="header-content">
+    <div class="brand">
+      <div class="brand-avatar">🏺</div>
+      <div class="brand-text">
+        <h1>Collector Assistant</h1>
+        <p>Rare & Vintage Marketplace Curator</p>
+      </div>
+    </div>
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      <span>Agent Active</span>
+    </div>
+  </div>
+</header>
+
+<div id="log">
+  <!-- Friendly initial greeting -->
+  <div class="msg agent">
+    <div class="avatar agent-avatar">🏺</div>
+    <div class="msg-content">
+      <span class="sender-name">Collector Assistant</span>
+      <div class="bubble">
+        <div class="msg-text">
+          <p><strong>Welcome to the Collector Assistant showroom.</strong></p>
+          <p>I can help you browse our certified collectibles catalog, appraise market trends, calculate CAGR investment returns in our code sandbox, generate custom display artwork, or locate specialized hobby shops near you.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<form id="form">
-  <input id="input" placeholder="Ask something…" autocomplete="off" autofocus>
-  <button class="send-btn">Send</button>
-</form>
+
+<div class="controls-dock">
+  <div class="dock-inner">
+    <div class="prompt-bar">
+      <div class="prompt-label">💡 Suggestions:</div>
+      <div id="example-prompts">
+        <button type="button" class="prompt-chip" onclick="sendMessage('Show rare trading cards in the catalog')">🃏 Show rare trading cards</button>
+        <button type="button" class="prompt-chip" onclick="sendMessage('Generate a showcase image for a 1986 Fleer Michael Jordan rookie card')">🎨 Generate showcase image</button>
+        <button type="button" class="prompt-chip" onclick="sendMessage('Calculate CAGR if bought at $5,000 and sold at $18,500 over 15 years')">📈 Calculate 15-yr CAGR</button>
+      </div>
+    </div>
+    <form id="form">
+      <input id="input" placeholder="Inquire about items, market prices, or generate showcase art…" autocomplete="off" autofocus>
+      <button class="send-btn" type="submit">
+        <span>Send</span>
+        <span>➤</span>
+      </button>
+    </form>
+    <div class="footer-caption">Powered by Gemini 2.5 Flash on Vertex AI Agent Runtime</div>
+  </div>
+</div>
 
 <script>
 const log = document.getElementById("log");
@@ -63,10 +410,43 @@ const input = document.getElementById("input");
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
+function formatMarkdown(text) {
+  if (!text) return "";
+  let safe = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  // bold
+  safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  // italic
+  safe = safe.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  // inline code
+  safe = safe.replace(/`([^`]+)`/g, "<code>$1</code>");
+  // double newlines to paragraph break, single to <br>
+  safe = safe.replace(/\n\n+/g, "</p><p>").replace(/\n/g, "<br>");
+  return "<p>" + safe + "</p>";
+}
+
 function bubble(who) {
   const m = el("div", "msg " + who);
+  const avatar = el("div", "avatar " + (who === "user" ? "user-avatar" : "agent-avatar"), who === "user" ? "👤" : "🏺");
+  const msgContent = el("div", "msg-content");
+  const senderName = el("span", "sender-name", who === "user" ? "You" : "Collector Assistant");
   const b = el("div", "bubble");
-  m.appendChild(b); log.appendChild(m); log.scrollTop = log.scrollHeight;
+
+  msgContent.appendChild(senderName);
+  msgContent.appendChild(b);
+
+  if (who === "user") {
+    m.appendChild(msgContent);
+    m.appendChild(avatar);
+  } else {
+    m.appendChild(avatar);
+    m.appendChild(msgContent);
+  }
+
+  log.appendChild(m);
+  log.scrollTop = log.scrollHeight;
   return b;
 }
 
@@ -98,52 +478,57 @@ function childIds(props) {
 function iconName(n) { return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase(); }
 
 function buildNode(id, comps, seen) {
-  if (!id || seen.has(id)) return null;   // missing / cycle guard
+  if (!id || seen.has(id)) return null;
   seen.add(id);
   const spec = comps[id];
-  if (!spec || typeof spec !== "object") return null;
+  if (!spec) return null;
   const type = Object.keys(spec)[0];
   const props = spec[type] || {};
-  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
 
-  switch (type) {
-    case "Card": {
-      const d = el("div", "a2card"); kids().forEach(n => d.appendChild(n)); return d;
-    }
-    case "Column":
-    case "List": {
-      const horizontal = type === "List" && props.direction === "horizontal";
-      const d = el("div", horizontal ? "a2row" : "a2col"); kids().forEach(n => d.appendChild(n)); return d;
-    }
-    case "Row": {
-      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
-      kids().forEach(n => d.appendChild(n)); return d;
-    }
-    case "Text": {
-      const t = el("div", "a2text");
-      const hint = String(props.usageHint || "body").toLowerCase();
-      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
-      else if (hint === "caption") t.classList.add("a2-caption");
-      t.textContent = boundStr(props.text);
-      return t;
-    }
-    case "Divider":
-      return el("hr", "a2divider");
-    case "Image": {
-      const src = boundStr(props.url || props.src);
-      if (!/^https?:\/\//i.test(src)) return null;   // only allow safe URLs
-      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
-    }
-    case "Icon": {
-      const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
-    }
-    default:
-      return null;   // unknown component -> skipped (text fallback covers content)
+  if (type === "Card") {
+    const node = el("div", "a2card");
+    for (const cid of childIds(props)) { const c = buildNode(cid, comps, seen); if (c) node.appendChild(c); }
+    return node;
   }
+  if (type === "Column") {
+    const node = el("div", "a2col");
+    for (const cid of childIds(props)) { const c = buildNode(cid, comps, seen); if (c) node.appendChild(c); }
+    return node;
+  }
+  if (type === "Row") {
+    const node = el("div", "a2row");
+    if (props.distribution === "spaceBetween") node.classList.add("between");
+    for (const cid of childIds(props)) { const c = buildNode(cid, comps, seen); if (c) node.appendChild(c); }
+    return node;
+  }
+  if (type === "Text") {
+    const text = boundStr(props.text);
+    const hint = (props.usageHint || "").toLowerCase();
+    const cls = hint.startsWith("h") ? `a2text a2-${hint}` : (hint === "caption" ? "a2text a2-caption" : "a2text");
+    return el("p", cls, text);
+  }
+  if (type === "Divider") return el("hr", "a2divider");
+  if (type === "List") {
+    const node = el("div", "a2col");
+    for (const cid of childIds(props)) { const c = buildNode(cid, comps, seen); if (c) node.appendChild(c); }
+    return node;
+  }
+  if (type === "Image") {
+    const url = boundStr(props.url);
+    if (!/^https?:\/\//i.test(url)) return null;
+    const img = el("img", "a2img");
+    img.src = url;
+    const alt = boundStr(props.accessibilityLabel);
+    if (alt) img.alt = alt;
+    return img;
+  }
+  if (type === "Icon") {
+    const name = iconName(boundStr(props.name));
+    return name ? el("span", "material-symbols-outlined", name) : null;
+  }
+  return null;
 }
 
-// Render one or more A2UI messages (beginRendering + surfaceUpdate) into `container`.
-// Returns true if anything was drawn.
 function renderSurface(messages, container) {
   const comps = {};
   const roots = [];
@@ -153,7 +538,7 @@ function renderSurface(messages, container) {
     if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
   }
   let rootIds = roots.filter(r => comps[r]);
-  if (rootIds.length === 0) {   // no valid root given -> infer un-referenced components
+  if (rootIds.length === 0) {
     const referenced = new Set();
     for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
     rootIds = Object.keys(comps).filter(id => !referenced.has(id));
@@ -174,16 +559,24 @@ function flattenText(messages) {
 }
 
 function renderReply(b, parts) {
-  b.textContent = "";   // clear the "…" placeholder
+  b.textContent = "";
   const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
   const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
 
   const textStr = texts.join("\n").trim();
-  if (textStr) b.appendChild(el("div", null, textStr));
+  if (textStr) {
+    const div = el("div", "msg-text");
+    div.innerHTML = formatMarkdown(textStr);
+    b.appendChild(div);
+  }
 
   if (a2ui.length) {
     b.classList.add("rich");
-    if (!renderSurface(a2ui, b)) b.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+    if (!renderSurface(a2ui, b)) {
+      const fb = el("div", "msg-text");
+      fb.innerHTML = formatMarkdown(flattenText(a2ui) || "(no card content)");
+      b.appendChild(fb);
+    }
   }
   if (!b.childNodes.length) b.textContent = "(no response)";
   log.scrollTop = log.scrollHeight;
@@ -191,14 +584,14 @@ function renderReply(b, parts) {
 
 async function sendMessage(text) {
   if (!text) return;
-  bubble("user").textContent = text;
+  const userBubble = bubble("user");
+  const userText = el("div", "msg-text");
+  userText.textContent = text;
+  userBubble.appendChild(userText);
   input.value = "";
   const b = bubble("agent"); b.textContent = "…";
   try {
     const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text }) });
-    // Read as text first, then parse. If the proxy ever returns a non-JSON error
-    // page (e.g. a plain "Internal Server Error"), show that body instead of a
-    // cryptic "Unexpected token" JSON error.
     const raw = await res.text();
     let data;
     try { data = JSON.parse(raw); }
