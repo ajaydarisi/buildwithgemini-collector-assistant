@@ -13,10 +13,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenScanner, onClearChat }) =>
       <div className="h-14 md:h-16 max-w-4xl mx-auto px-4 sm:px-6 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-2.5">
-          <span className="w-2 h-2 rounded-full bg-gilded-amber shrink-0" />
-          <h1 className="font-headline text-xl text-primary font-semibold tracking-tight">
-            Collector Assistant
-          </h1>
+          <img src="/favicon.svg" alt="Collector Assistant" className="w-7 h-7 rounded-lg shadow-sm shrink-0" />
+          <div className="flex items-center gap-1.5">
+            <h1 className="font-headline text-xl text-primary font-semibold tracking-tight">
+              Collector Assistant
+            </h1>
+            <img src="/favicon.svg" alt="Favicon" className="w-4 h-4 opacity-80 shrink-0" />
+          </div>
           <span className="text-xs text-on-surface-variant font-label hidden sm:inline">
             • AI Valuation &amp; Appraisal
           </span>

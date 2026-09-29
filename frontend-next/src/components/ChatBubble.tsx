@@ -65,11 +65,10 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
     <div className="flex flex-col items-start gap-1.5 max-w-3xl mr-auto w-full animate-fadeIn">
       {/* Sender Header */}
       <div className="flex items-center gap-1.5 ml-1 text-outline">
-        <span className="material-symbols-outlined text-[15px] text-gilded-amber">
-          auto_awesome
-        </span>
-        <span className="font-label text-xs font-medium text-primary">
+        <img src="/favicon.svg" alt="Icon" className="w-4 h-4 rounded-sm shrink-0" />
+        <span className="font-label text-xs font-medium text-primary flex items-center gap-1">
           Collector Assistant
+          <img src="/favicon.svg" alt="Icon" className="w-3.5 h-3.5 opacity-80 shrink-0" />
         </span>
       </div>
 

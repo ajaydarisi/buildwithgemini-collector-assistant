@@ -1,4 +1,4 @@
-# Collector Assistant 🏺
+# Collector Assistant <img src="./favicon.svg" width="34" height="34" alt="Collector Assistant" align="center" />
 
 > An intelligent marketplace curator and appraisal agent for rare collectibles, built with Google's Agent Development Kit (ADK), Gemini 2.5 Flash, and Google Cloud Agent Platform.
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-**Collector Assistant** is an agent designed for collectors, auction houses, and hobbyists across high-value collectible categories (trading cards, vintage watches, sneakers, retro video games, coins, and vinyl records).
+**Collector Assistant** <img src="./favicon.svg" width="20" height="20" alt="Collector Assistant" align="center" /> is an agent designed for collectors, auction houses, and hobbyists across high-value collectible categories (trading cards, vintage watches, sneakers, retro video games, coins, and vinyl records).
 
 The agent connects real-time database catalog queries, AI appraisal estimates, multimodal visual inspection, studio media generation, geolocation services, and safe Python financial modeling inside an Agent Engine sandbox.
 
@@ -61,7 +61,7 @@ Based on the codebase in `app/` and `agents-cli-manifest.yaml`, the agent implem
 
 ## Persistent Storage Architecture
 
-Collector Assistant uses a multi-tiered persistence model across the backend and the client browser:
+Collector Assistant <img src="./favicon.svg" width="20" height="20" alt="Collector Assistant" align="center" /> uses a multi-tiered persistence model across the backend and the client browser:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
