@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A2530" />
+      <stop offset="50%" stop-color="#131B23" />
+      <stop offset="100%" stop-color="#0B1015" />
+    </linearGradient>
+
+    <!-- Gold Foil Gradient -->
+    <linearGradient id="goldGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#FFF0BE" />
+      <stop offset="25%" stop-color="#E2B755" />
+      <stop offset="60%" stop-color="#C59237" />
+      <stop offset="90%" stop-color="#996E20" />
+      <stop offset="100%" stop-color="#5E4310" />
+    </linearGradient>
+
+    <!-- Inner Glow -->
+    <radialGradient id="amberGlow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#E2B755" stop-opacity="0.35" />
+      <stop offset="70%" stop-color="#E2B755" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Squircle Base with Soft Bevel -->
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bgGrad)" stroke="#E2B755" stroke-width="4" stroke-opacity="0.3" />
+  
+  <!-- Subtle Amber Radial Ambient -->
+  <circle cx="256" cy="240" r="180" fill="url(#amberGlow)" />
+
+  <!-- Classical Collector Amphora / Gem Iconography -->
+  <g transform="translate(256, 250) scale(0.9) translate(-256, -250)">
+    <!-- Decorative Rim / Crown -->
+    <path d="M 196 110 C 196 102 204 96 214 96 L 298 96 C 308 96 316 102 316 110 L 316 122 C 316 128 308 132 298 132 L 214 132 C 204 132 196 128 196 122 Z" 
+          fill="url(#goldGrad)" />
+    
+    <!-- Neck with classical fluting -->
+    <path d="M 226 132 L 286 132 L 292 186 C 275 190 237 190 220 186 Z" 
+          fill="url(#goldGrad)" opacity="0.95" />
+
+    <!-- Main Vessel Body with Faceted Gem Form -->
+    <path d="M 220 186 
+             C 170 205 140 250 140 300 
+             C 140 355 180 405 240 422 
+             L 256 426 
+             L 272 422 
+             C 332 405 372 355 372 300 
+             C 372 250 342 205 292 186 
+             Z" 
+          fill="url(#goldGrad)" />
+
+    <!-- Facet Shadow / Highlights -->
+    <path d="M 256 186 L 256 426 C 316 410 356 360 356 300 C 356 250 326 210 276 190 Z" 
+          fill="#000000" opacity="0.18" />
+
+    <path d="M 256 195 L 210 280 L 256 385 L 302 280 Z" 
+          fill="#FFF4D0" opacity="0.32" />
+
+    <!-- Sculpted Handles -->
+    <!-- Left Handle -->
+    <path d="M 218 160 
+             C 140 165 110 220 120 280 
+             C 124 298 134 305 144 295 
+             C 148 290 145 275 142 260 
+             C 136 225 155 192 216 182 Z" 
+          fill="url(#goldGrad)" />
+
+    <!-- Right Handle -->
+    <path d="M 294 160 
+             C 372 165 402 220 392 280 
+             C 388 298 378 305 368 295 
+             C 364 290 367 275 370 260 
+             C 376 225 357 192 296 182 Z" 
+          fill="url(#goldGrad)" />
+
+    <!-- Base Pedestal -->
+    <path d="M 230 426 L 282 426 L 296 446 C 298 449 296 452 290 452 L 222 452 C 216 452 214 449 216 446 Z" 
+          fill="url(#goldGrad)" />
+
+    <!-- 4-Point Sparkle Star on Shoulder -->
+    <path d="M 256 220 Q 256 240 276 240 Q 256 240 256 260 Q 256 240 236 240 Q 256 240 256 220" 
+          fill="#FFFFFF" />
+  </g>
+</svg>

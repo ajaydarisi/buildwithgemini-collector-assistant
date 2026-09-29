@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { EB_Garamond, DM_Sans } from "next/font/google";
+import { ServiceWorkerRegister } from "../components/ServiceWorkerRegister";
 import "./globals.css";
 
 const ebGaramond = EB_Garamond({
@@ -15,9 +16,25 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Curator Dialogue | Presented by Darisi",
+  title: "Collector Assistant | AI Appraisal & Valuation",
   description:
     "Valuation Concierge Desk & Appraisal Engine for Rare Collectibles, Sports Cards, Vintage Horology & Memorabilia.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Collector",
+  },
 };
 
 export const viewport: Viewport = {
@@ -26,7 +43,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#FDFBF7",
+  themeColor: "#1A2530",
 };
 
 export default function RootLayout({
@@ -43,6 +60,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-canvas-linen font-body text-on-surface antialiased min-h-screen">
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>
