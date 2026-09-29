@@ -48,13 +48,60 @@ Based on the codebase in `app/` and `agents-cli-manifest.yaml`, the agent implem
 * **`geocode_address`**: Converts street addresses or landmark names into latitude/longitude coordinates using the Geocoding API.
 * **`find_nearby_places`**: Discovers local hobby shops, card stores, and antique auction houses within a given radius using the Google Places API (New).
 
-### 6. 💬 Web Chat Frontend & A2UI Renderer
+### 6. 💬 Web Chat Frontend, A2UI Renderer & PWA
 * **FastAPI Proxy (`frontend/main.py`)**: Forwards browser chat messages to the agent using the Agent-to-Agent (A2A) protocol.
 * **Next.js Frontend & A2UI Renderer (`frontend-next/` & `frontend/static/`)**:
   * Clean, minimal luxury concierge UI styled with `EB Garamond` and `DM Sans`.
   * Real-time Server-Sent Events (SSE) token streaming.
   * Native camera capture (`capture="environment"`) and photo library upload.
   * Integrated **A2UI v0.8 renderer** supporting Cards, Columns, Rows, Text, Images, Dividers, and Material Symbols icons.
+  * **Progressive Web App (PWA)**: Web app manifest (`manifest.json`), service worker (`sw.js`) for offline shell caching, and custom gold amphora SVG/ICO favicons and Apple Touch icons.
+
+---
+
+## Persistent Storage Architecture
+
+Collector Assistant uses a multi-tiered persistence model across the backend and the client browser:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        COLLECTOR ASSISTANT PERSISTENCE                 │
+├──────────────────────────────────┬─────────────────────────────────────┤
+│      CLOUD / BACKEND STORAGE     │    BROWSER / CLIENT PERSISTENCE     │
+├──────────────────────────────────┼─────────────────────────────────────┤
+│  • Google Cloud Firestore        │  • Native IndexedDB Storage         │
+│    - Collection: collectibles    │    - Database: CollectorAssistantDB │
+│    - Schema: listings, prices,   │    - Store: chat_history            │
+│      condition grades, status    │    - Auto-saves all chat dialogues, │
+│  • Google Cloud Storage (GCS)    │      A2UI cards & camera snapshots  │
+│    - Public media assets bucket  │    - Survives reloads & tab closes  │
+│    - Generative Imagen photos    │    - No 5MB localStorage quota limit│
+│    - Omni rotating video clips   │  • PWA Service Worker Cache (sw.js) │
+│    - Uploaded inspection photos  │    - Pre-caches core app shell      │
+│    - Public URL embeds & CORS    │    - Bypasses SSE streaming routes  │
+└──────────────────────────────────┴─────────────────────────────────────┘
+```
+
+1. **Firestore Database (`collectibles` collection)**:
+   - Persistent NoSQL storage for the marketplace catalog.
+   - Initialized with an explicit hardcoded project ID (`qwiklabs-gcp-04-1a63b44d06d9`) to avoid project number resolution mismatches on Agent Platform.
+   - Supports catalog search, appraisal comp lookups, document inserts, and atomic status updates (`available`, `reserved`, `sold`).
+
+2. **Google Cloud Storage (Public Bucket)**:
+   - Dedicated bucket with `roles/storage.objectViewer` public permissions and CORS configuration.
+   - Permanently stores AI-generated showcase imagery, Omni turntable video renderings, and user-captured camera inspection uploads.
+   - Generates public URLs (`https://storage.googleapis.com/<bucket>/<object>`) directly embeddable across web and markdown clients.
+
+3. **Client-Side Conversation Storage (Native IndexedDB)**:
+   - Implemented in `frontend-next/src/utils/chatStorage.ts` via the browser's native `IndexedDB` API.
+   - Automatically hydrates previous messages on page load and writes state updates asynchronously.
+   - Overcomes the standard 5MB `localStorage` limit, ensuring base64 photo inspection captures and multi-turn A2UI payload history never trigger `QuotaExceededError`.
+   - Includes a **"New Chat"** reset control in the header to clear client storage on demand.
+
+4. **Service Worker Offline Shell Caching (`sw.js`)**:
+   - Pre-caches essential web app assets (HTML, manifest, icons, stylesheets).
+   - Network-first strategy with cache fallback for instant navigation.
+   - Streaming-safe: explicitly bypasses `/chat` and SSE `/stream` endpoints to guarantee immediate token delivery.
 
 ---
 
@@ -70,6 +117,8 @@ Based on the codebase in `app/` and `agents-cli-manifest.yaml`, the agent implem
 | **Agent Engine Code Sandbox** | ✅ Implemented | Live in `app/agent.py` (`execute_python_in_sandbox`) via `AgentEngineSandboxCodeExecutor` |
 | **Google Maps & Places Tools** | ✅ Implemented | Live in `app/agent.py` (`geocode_address`, `find_nearby_places`) |
 | **A2A Protocol & Chat Web UI** | ✅ Implemented | Live in `frontend/main.py` + `frontend-next/` static export |
+| **Browser-Level Chat Persistence** | ✅ Implemented | Native `IndexedDB` storage (`chatStorage.ts`) + "New Chat" reset action |
+| **PWA & Offline Asset Caching** | ✅ Implemented | Web App Manifest (`manifest.json`), gold amphora favicons, and Service Worker (`sw.js`) |
 | **Cross-Session Memory Bank** | ⏳ Planned, not yet implemented | Currently maintains active session context via A2A; long-term cross-session Memory Bank persistence is planned for a future release |
 
 ---
